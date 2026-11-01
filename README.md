@@ -84,7 +84,7 @@ These are in addition to the [WINE image's variables](https://github.com/LANComm
 | `GES_RCON_PASSWORD` | `+rcon_password`. Empty disables RCON. | |
 | `GES_LAN` | `+sv_lan`: `1` for LAN only, `0` for internet | `1` |
 | `GES_SERVER_CFG` | `+servercfgfile`, run on every map load (in `gesource/cfg/`) | `server.cfg` |
-| `GES_EXTRA_ARGS` | Extra srcds arguments, split on whitespace | |
+| `GES_EXTRA_ARGS` | Extra srcds arguments, split on whitespace (e.g. `-insecure`) | |
 | `STEAM_APP_ID` | Source 2007 Dedicated Server app | `310` |
 | `STEAM_APP_UPDATE` | Install/update app 310 on start | `true` |
 | `STEAM_VALIDATE` | Validate the install on every start | `false` |
@@ -92,7 +92,7 @@ These are in addition to the [WINE image's variables](https://github.com/LANComm
 | `STEAM_BRANCH` / `STEAM_BRANCH_PASSWORD` | SteamCMD beta branch | |
 | `STEAM_INSTALL_ATTEMPTS` | SteamCMD retries | `3` |
 | `START_EXE` | Launcher | `/usr/local/bin/ges-server` |
-| `START_ARGS` | Extra arguments, passed before the `GES_*` cvars | |
+| `START_ARGS` | Extra arguments, passed before the `GES_*` cvars. Prefer `GES_EXTRA_ARGS`: the base entrypoint splits a single-word `START_ARGS` into characters. | |
 
 See [Documentation/Docker.md](Documentation/Docker.md) for more detail.
 
