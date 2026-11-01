@@ -8,7 +8,7 @@ The image builds on [`lancommander/wine`](https://github.com/LANCommander/LANCom
 ## Features
 
 - Installs and updates the Source 2007 Dedicated Server (Steam app 310) with SteamCMD, anonymously
-- Installs the `gesource` mod from the official GE:S server archive. The archive's sha256 is checked, and the mod is reinstalled only when the archive changes.
+- Installs the `gesource` mod from the official GE:S server archive (5.0.6). The archive's sha256 is checked, and the mod is reinstalled only when the archive changes.
 - Common server settings are environment variables
 - The server console (`gesource/console.log`) is streamed to `docker logs`
 - Supports file overlaying using OverlayFS (no file copying required)
@@ -49,7 +49,7 @@ services:
 
 The server is installed in two parts:
 
-1. **Source 2007 Dedicated Server**: SteamCMD downloads Steam app 310 (Windows depot, about 2 GB) into `config/Server/` on every start. Set `STEAM_APP_UPDATE=false` to skip the update once it is installed.
+1. **Source 2007 Dedicated Server**: SteamCMD downloads Steam app 310 (Windows depot, about 3 GB) into `config/Server/` on every start. Set `STEAM_APP_UPDATE=false` to skip the update once it is installed.
 2. **GoldenEye: Source**: the `gesource/` folder comes from the official server archive, `GoldenEye_Source_v5.0.6_full_server_windows.7z`, listed on [geshl2.com/server-downloads](https://www.geshl2.com/server-downloads). ModDB, which hosts it, doesn't allow scripted downloads. So download it in a browser and put it at `config/GoldenEye_Source_v5.0.6_full_server_windows.7z`, or set `GES_ARCHIVE` to a URL where you host it. It is extracted to `Server/gesource/` on the first start. After that the archive can be deleted.
 
 ## Directory Layout (Host)

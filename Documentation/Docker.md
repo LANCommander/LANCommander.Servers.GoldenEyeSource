@@ -45,7 +45,19 @@ Before the first start, download `GoldenEye_Source_v5.0.6_full_server_windows.7z
    - chowns `Server/` to the server user and remounts the overlay, so the new files show up in `Merged/`.
 3. `START_EXE` (`/usr/local/bin/ges-server`) runs `wine-run srcds.exe -console -game gesource -condebug -port <GES_PORT> +maxplayers ... +map <GES_MAP>` under Xvfb. It also follows `gesource/console.log` to stdout.
 
-The first start downloads about 2 GB from Steam and extracts the 2 GB GE:S archive, so it takes several minutes.
+The first start downloads about 3 GB from Steam and extracts the 2 GB GE:S archive, so it takes several minutes. Later starts skip the extraction.
+
+A successful start ends with:
+
+```
+Attempting to load scenario: deathmatch
+Loading scenario DeathMatch from disk
+Successfully loaded scenario deathmatch!
+```
+
+### Why Wine
+
+The archive also contains a Linux `gesource/bin/server_i486.so`, but it isn't usable. Running on the Linux build of app 310, it needs `libldap_r-2.4.so.2` (no longer in Debian 12). With that supplied, it still aborts during the map load (`free(): invalid pointer`, `Invalid scenario ''`). The GE:S team's own Linux guide runs the Windows server under Wine, as this image does.
 
 ## Configuration Options
 
@@ -58,9 +70,13 @@ The first start downloads about 2 GB from Steam and extracts the 2 GB GE:S archi
 
 See the [README](../README.md#environment-variables) for the full table.
 
+### Maps
+
+`ge_archives`, `ge_aztec`, `ge_basement`, `ge_bunker`, `ge_casino`, `ge_caverns`, `ge_caves`, `ge_complex`, `ge_control`, `ge_cradle`, `ge_dam`, `ge_depot`, `ge_egyptian`, `ge_facility`, `ge_facility_backzone`, `ge_runway`, `ge_silo`, `ge_transition`. N64-style versions: `ge_archives_classic`, `ge_basement_classic`, `ge_bunker_classic`, `ge_complex_classic`, `ge_facility_classic`, `ge_library_classic`, `ge_stack_classic`, `ge_temple_classic`.
+
 ### Server Configuration
 
-Put config files in `Overlay/gesource/cfg/`, so they're layered over the installed files:
+Put config files in `Overlay/gesource/cfg/`, so they're layered over the installed files. The archive ships several ready-made configs (`server_dm_only.cfg`, `server_teamplay.cfg`, `server_n64_classic.cfg`, ...), which you can select with `GES_SERVER_CFG`.
 
 - `server.cfg` (or `GES_SERVER_CFG`) runs on every map load
 - `valve.rc` runs once at server start
@@ -85,4 +101,5 @@ Put `.ps1` scripts in `config/Scripts/Hooks/<HookName>/`.
 
 - **`GoldenEye: Source is not installed and GES_ARCHIVE (...) was not found`**: the archive isn't at the `GES_ARCHIVE` path. Check the file name and that it's inside the `/config` volume.
 - **`sha256 mismatch`**: the archive isn't the official 5.0.6 server archive, or the download is incomplete. If you use another release on purpose, set `GES_ARCHIVE_SHA256` to its hash, or to empty to skip the check.
+- **About 20% CPU when idle**: this is normal for srcds under Wine.
 - **No output in `docker logs` after `Starting: srcds.exe ...`**: srcds writes its console to `gesource/console.log` only after the engine has started. The first start under Wine can take a minute.
