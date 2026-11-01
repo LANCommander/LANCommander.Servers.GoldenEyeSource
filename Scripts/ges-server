@@ -1,0 +1,41 @@
+#!/bin/sh
+# Start the GoldenEye: Source dedicated server (START_EXE).
+#
+# Runs the Source 2007 srcds.exe under Wine (wine-run, with Xvfb: srcds -console needs a window
+# for its console). The GES_* settings become srcds arguments; START_ARGS are appended as-is.
+# srcds's console window isn't visible under Wine, so -condebug writes gesource/console.log and
+# that file is followed to stdout for `docker logs`.
+set -e
+
+cd "${SERVER_ROOT:-/config/Merged}"
+
+if [ ! -f srcds.exe ] || [ ! -f gesource/gameinfo.txt ]; then
+    echo "srcds.exe or gesource/gameinfo.txt not found in $(pwd); the install hook did not finish." >&2
+    exit 1
+fi
+
+set -- -console -game gesource -condebug \
+    -port "${GES_PORT:-27015}" \
+    +maxplayers "${GES_MAX_PLAYERS:-16}" \
+    +sv_lan "${GES_LAN:-1}" \
+    "$@"
+
+[ -z "$GES_HOSTNAME" ]      || set -- "$@" +hostname "$GES_HOSTNAME"
+[ -z "$GES_PASSWORD" ]      || set -- "$@" +sv_password "$GES_PASSWORD"
+[ -z "$GES_RCON_PASSWORD" ] || set -- "$@" +rcon_password "$GES_RCON_PASSWORD"
+[ -z "$GES_SERVER_CFG" ]    || set -- "$@" +servercfgfile "$GES_SERVER_CFG"
+
+# GES_EXTRA_ARGS is split on whitespace
+# shellcheck disable=SC2086
+[ -z "$GES_EXTRA_ARGS" ] || set -- "$@" $GES_EXTRA_ARGS
+
+set -- "$@" +map "${GES_MAP:-ge_archives}"
+
+# Log the command line without the RCON password
+echo "Starting: srcds.exe $*" | sed "s/+rcon_password [^ ]*/+rcon_password ****/"
+
+# console.log is appended to on every start; only show new lines
+touch gesource/console.log
+tail -n 0 -F gesource/console.log 2>/dev/null &
+
+exec wine-run srcds.exe "$@"
