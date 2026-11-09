@@ -11,6 +11,7 @@ The image builds on [`lancommander/wine`](https://github.com/LANCommander/LANCom
 - Installs the `gesource` mod from the official GE:S server archive (5.0.6). The archive's sha256 is checked, and the mod is reinstalled only when the archive changes.
 - Common server settings are environment variables
 - The server console (`gesource/console.log`) is streamed to `docker logs`
+- Installs SourceMod, and the LANCommander match statistics plugin when it's configured
 - Supports file overlaying using OverlayFS (no file copying required)
 
 ## Docker Compose Example
@@ -95,6 +96,50 @@ These are in addition to the [WINE image's variables](https://github.com/LANComm
 | `START_ARGS` | Extra arguments, passed before the `GES_*` cvars. Prefer `GES_EXTRA_ARGS`: the base entrypoint splits a single-word `START_ARGS` into characters. | |
 
 See [Documentation/Docker.md](Documentation/Docker.md) for more detail.
+
+## SourceMod and Match Statistics
+
+[Metamod:Source and SourceMod](https://www.sourcemod.net/) are installed into `gesource/addons/` (in `Overlay/`) on the first start.
+They're the Windows builds, because `srcds.exe` runs under Wine. They aren't updated afterwards: delete
+`Overlay/gesource/addons/metamod` or `Overlay/gesource/addons/sourcemod` to have them installed again. Put plugins in
+`Overlay/gesource/addons/sourcemod/plugins/`. SourceMod has no gamedata for GoldenEye: Source, so plugins that need SDK Tools'
+game-specific functions may not work.
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `INSTALL_SOURCEMOD` | Install Metamod:Source and SourceMod | `true` |
+| `METAMOD_MAJOR_VERSION` / `METAMOD_VERSION` | Metamod:Source build | `1.12` / `1.12.0-git1229` |
+| `SOURCEMOD_MAJOR_VERSION` / `SOURCEMOD_VERSION` | SourceMod build | `1.12` / `1.12.0-git7259` |
+| `METAMOD_URL` / `SOURCEMOD_URL` | Download these instead | |
+
+The server can report the matches played on it to LANCommander, with the
+[LANCommander match statistics plugin](https://github.com/LANCommander/LANCommander.MatchStatistics.SourceMod).
+The plugin is built into the image and needs SourceMod. It is turned on when `MATCH_STATS_SERVER_URL` and
+`MATCH_STATS_TOKEN` are set, and is then copied into `gesource/addons/sourcemod/` on every start. There is no GoldenEye: Source module, so the
+plugin records what every Source game shares: players, kills, damage, spawns, chat and the standings. Turned off, the plugin's files are removed again.
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MATCH_STATS_ENABLED` | `auto`: on when `MATCH_STATS_SERVER_URL` and `MATCH_STATS_TOKEN` are set. `true` or `false` | `auto` |
+| `MATCH_STATS_SERVER_URL` | The LANCommander server, e.g. `http://lancommander.lan:1337` | *(empty)* |
+| `MATCH_STATS_TOKEN` | A LANCommander access token with the **Report matches** scope (Profile → Access Tokens). It isn't written to any file | *(empty)* |
+| `MATCH_STATS_GAME_ID` | The game's id in LANCommander | *(empty)* |
+| `MATCH_STATS_SERVER_ID` | This server's id in LANCommander, if LANCommander manages it | *(empty)* |
+| `MATCH_STATS_REPORTER_NAME` | How the server is named in LANCommander | *(hostname)* |
+| `MATCH_STATS_MIN_PLAYERS` | Human players needed before a match is recorded | *(1)* |
+| `MATCH_STATS_MODE` | The mode reported. Empty lets the game module decide | *(empty)* |
+| `MATCH_STATS_RECORD_BOTS` | Record bots as players (`true`/`false`) | *(true)* |
+| `MATCH_STATS_RECORD_CHAT` | Record chat messages (`true`/`false`) | *(false)* |
+| `MATCH_STATS_ATTACH_DEMOS` | Upload SourceTV demos recorded with `tv_record` (`true`/`false`) | *(true)* |
+
+The settings are written to `gesource/cfg/sourcemod/lancommander.cfg` as `lc_*` cvars on every start. Settings left
+empty aren't written, so they and the plugin's other `lc_*` cvars (see its README) can be set in
+`gesource/cfg/sourcemod/sourcemod.cfg` instead. A `lancommander.cfg` you put in `Overlay/gesource/cfg/sourcemod/` yourself
+is left alone.
+
+`sm_lc_status` over RCON shows the match being recorded and how delivery is going. Reports that couldn't be
+delivered yet are kept in `Overlay/gesource/addons/sourcemod/extensions/.interposer/Matches/` and sent once LANCommander
+can be reached.
 
 ---
 
