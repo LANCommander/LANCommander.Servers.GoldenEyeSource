@@ -87,11 +87,10 @@ ENV MATCH_STATS_ENABLED="auto" \
 ARG MATCH_STATS_VERSION=1.0.0
 ARG MATCH_STATS_SHA256=7cabe64ea1b927702667a9ec60dc87943e524d7a242b31396aebfe637933d177
 
-ADD --checksum=sha256:${MATCH_STATS_SHA256} \
-    https://github.com/LANCommander/LANCommander.MatchStatistics.SourceMod/releases/download/v${MATCH_STATS_VERSION}/LANCommander.SourceMod.MatchStatistics-v${MATCH_STATS_VERSION}.zip \
-    /tmp/match-stats.zip
-
-RUN unzip -q /tmp/match-stats.zip 'addons/*' -x 'addons/sourcemod/scripting/*' '*.so' -d /opt/lancommander-stats && \
+RUN curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o /tmp/match-stats.zip \
+      "https://github.com/LANCommander/LANCommander.MatchStatistics.SourceMod/releases/download/v${MATCH_STATS_VERSION}/LANCommander.SourceMod.MatchStatistics-v${MATCH_STATS_VERSION}.zip" && \
+    echo "${MATCH_STATS_SHA256}  /tmp/match-stats.zip" | sha256sum -c - && \
+    unzip -q /tmp/match-stats.zip 'addons/*' -x 'addons/sourcemod/scripting/*' '*.so' -d /opt/lancommander-stats && \
     rm /tmp/match-stats.zip
 
 COPY Scripts/ges-server /usr/local/bin/ges-server
